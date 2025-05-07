@@ -147,9 +147,9 @@ const extensions = [
   SearchAndReplace,
 ];
 
-function debounce(func: any, wait: number) {
+function debounce(func: (...args: any[]) => any, wait: number) {
   let timeout: NodeJS.Timeout;
-  return function (...args: any[]) {
+  return function (this: any, ...args: any[]) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
@@ -166,7 +166,7 @@ interface GreatGrandParentArray {
 
 export default function Editor() {
   const [content, setContent] = useState("");
-  const [theme, setTheme] = useState();
+  const [theme, setTheme] = useState<"dark" | "light">();
   const [disable, setDisable] = useState(false);
   const editorWrapperRef = useRef<HTMLDivElement | null>(null);
   const [iframeWrapper, setIframeWrapper] =
@@ -196,7 +196,7 @@ export default function Editor() {
     }
   };
 
-  const alignIframe = (alignName) => {
+  const alignIframe = (alignName: string = ``) => {
     // console.log(
     //   `AlignName:${alignName}\ngreatGrandParentArray.length:${greatGrandParentArray.length}`
     // );
@@ -335,7 +335,9 @@ export default function Editor() {
           let buttonName = null;
           if (!buttonName) {
             (button as HTMLElement).removeEventListener("click", () =>
-              alignIframe(buttonName)
+              typeof buttonName === "string"
+                ? alignIframe(buttonName)
+                : alignIframe()
             );
           }
         });
@@ -384,34 +386,28 @@ export default function Editor() {
   );
 
   return (
-    <main
-      style={{
-        padding: "0 20px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1024,
-          margin: "88px auto 120px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginBottom: 10,
-          }}
-          className="buttonWrap"
-        >
-          <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-            {theme === "dark" ? "Light ☀️" : "Dark 🌑"}
+    <main>
+      <div>
+        <div className="buttonWrap">
+          <button
+            className={`btn ${theme === "dark" ? "dark" : "light"}`}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? "Light ☀️" : "Dark 🌙"}
           </button>
-          <button onClick={() => setDisable(!disable)}>
+          <button
+            className={`btn ${theme === "dark" ? "dark" : "light"}`}
+            onClick={() => setDisable(!disable)}
+          >
             {disable ? "Editable" : "Readonly"}
           </button>
           {iframeWrapper
             ? Array.from(iframeWrapper).map((wrapper, index) => (
-                <button key={index} onClick={() => makeActive(index)}>
+                <button
+                  className={`btn ${theme === "dark" ? "dark" : "light"}`}
+                  key={index}
+                  onClick={() => makeActive(index)}
+                >
                   {isIframeActive[index]
                     ? `Deselect Iframe #${index + 1}`
                     : `Select Iframe #${index + 1}`}
@@ -445,20 +441,25 @@ export default function Editor() {
             }}
           />
         </div>
-        {typeof content === "string" && (
-          <textarea
-            className="textarea"
-            readOnly
+        <div
+          style={{
+            display: `flex`,
+            justifyContent: "flex-end",
+            marginTop: "20px",
+            marginRight: "20px",
+          }}
+        >
+          <button
             style={{
-              marginTop: 20,
-              height: 500,
-              width: "100%",
-              borderRadius: 4,
-              padding: 10,
+              padding: "15px 40px",
+              fontSize: "1em",
+              borderRadius: "12px",
             }}
-            value={content}
-          />
-        )}
+            className={`btn ${theme === "dark" ? "dark" : "light"}`}
+          >
+            SEND
+          </button>
+        </div>
       </div>
     </main>
   );
